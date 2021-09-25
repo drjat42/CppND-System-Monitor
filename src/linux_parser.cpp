@@ -1,9 +1,10 @@
+#include <iostream>
 #include <dirent.h>
 #include <unistd.h>
 #include <string>
 #include <vector>
 
-#include "linux_parser.h"
+#include <linux_parser.h>
 
 using std::stof;
 using std::string;
@@ -66,11 +67,75 @@ vector<int> LinuxParser::Pids() {
   return pids;
 }
 
-// TODO: Read and return the system memory utilization
-float LinuxParser::MemoryUtilization() { return 0.0; }
+/* Return the fraction of memeory in use. */
+float LinuxParser::MemoryUtilization() {
+  float value, total, free;
+  string line, key;
 
-// TODO: Read and return the system uptime
-long LinuxParser::UpTime() { return 0; }
+  /*
+  Total used memory = MemTotal - MemFree   <=  sticking with the simple one for now
+  
+  Non cache/buffer memory (green) = Total used memory - (Buffers + Cached memory)
+  Buffers (blue) = Buffers
+  Cached memory (yellow) = Cached + SReclaimable - Shmem
+
+  Possible Keys:
+  ==============
+  MemTotal:
+  MemFree:
+  MemAvailable:
+  Buffers:
+  Cached:
+  Shmem:
+  SReclaimable:
+  */
+  std::ifstream filestream(kProcDirectory + kMeminfoFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+       while (linestream >> key >> value) {
+          if (key == "MemTotal:") {
+            total = value;
+          }
+         if (key == "MemFree:") {
+            free = value;
+          }
+        }
+    }
+  }
+
+  float usage = (total - free)  / total;
+  return usage;
+}
+
+/*
+PrevIdle = previdle + previowait
+Idle = idle + iowait
+
+PrevNonIdle = prevuser + prevnice + prevsystem + previrq + prevsoftirq + prevsteal
+NonIdle = user + nice + system + irq + softirq + steal
+
+PrevTotal = PrevIdle + PrevNonIdle
+Total = Idle + NonIdle
+
+# differentiate: actual value minus the previous one
+totald = Total - PrevTotal
+idled = Idle - PrevIdle
+CPU_Percentage = (totald - idled)/totald
+*/
+
+/* Return the system uptime in seconds */
+long LinuxParser::UpTime() { 
+  float uptime;
+  string line;
+  std::ifstream stream(kProcDirectory + kUptimeFilename);
+  if (stream.is_open()) {
+    std::getline(stream, line);
+    std::istringstream linestream(line);
+    linestream >> uptime;
+  }
+  return uptime;
+ }
 
 // TODO: Read and return the number of jiffies for the system
 long LinuxParser::Jiffies() { return 0; }
@@ -88,11 +153,45 @@ long LinuxParser::IdleJiffies() { return 0; }
 // TODO: Read and return CPU utilization
 vector<string> LinuxParser::CpuUtilization() { return {}; }
 
-// TODO: Read and return the total number of processes
-int LinuxParser::TotalProcesses() { return 0; }
+// Return the total number of processes
+int LinuxParser::TotalProcesses() { 
+  string line, key;
+  int value;
+  std::ifstream filestream(kProcDirectory + kStatFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+       while (linestream >> key >> value) {
+          if (key == "processes") {
+            return value;
+          }
+        }
+    }
+  }
+  // Should not happen.
+  std::cerr << "It happened." << std::endl;
+  return -42;
+ }
 
 // TODO: Read and return the number of running processes
-int LinuxParser::RunningProcesses() { return 0; }
+int LinuxParser::RunningProcesses() { 
+  string line, key;
+  int value;
+  std::ifstream filestream(kProcDirectory + kStatFilename);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+       while (linestream >> key >> value) {
+          if (key == "procs_running") {
+            return value;
+          }
+        }
+    }
+  }
+  // Should not happen.
+  std::cerr << "It happened." << std::endl;
+  return -42;
+ }
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
@@ -112,4 +211,4 @@ string LinuxParser::User(int pid[[maybe_unused]]) { return string(); }
 
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) { return 0; }
+long LinuxParser::UpTime(int pid) { return 0; }
