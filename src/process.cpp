@@ -13,22 +13,32 @@ using std::vector;
 
 Process::Process(const int pid) : pid_(pid), user_(LinuxParser::User(pid)), command_(LinuxParser::Command(pid)) {};
 
-// TODO: Return this process's ID
+// Return this process's ID
 int Process::Pid() const { return pid_; }
 
-// TODO: Return this process's CPU utilization
-float  Process::CpuUtilization() const { return 0; } 
+// Return this process's CPU utilization
+float  Process::CpuUtilization()  { 
+    long activeJiffies = LinuxParser::ActiveJiffies(Pid());   
+    long activeTime = activeJiffies / sysconf(_SC_CLK_TCK); // Convert from clock ticks to seconds.
+    long uptime = UpTime();
+    float utilization = uptime == 0 ? 0 : activeTime / uptime;
+    return utilization;
+ } 
 
-// TODO: Return the command that generated this process
+// Return the command that generated this process
 string Process::Command() const { return command_; }
 
-// TODO: Return this process's memory utilization
-string Process::Ram() { return string(); }
+// Return this process's memory utilization
+string Process::Ram() { 
+    long kb = std::stol(LinuxParser::Ram(Pid()));
+    string mb = to_string(std::round((kb / 1000)));  // Convert to whole megabytes
+    return mb.substr(0, mb.find('.'));               // Lop off the decimal zeros
+}
 
-// TODO: Return the user (name) that generated this process
+// Return the user (name) that generated this process
 string Process::User() const { return user_; }
 
-// TODO: Return the age of this process (in seconds)
+// Return the age of this process (in seconds)
 long int Process::UpTime() { return LinuxParser::UpTime(Pid()); }
 
 // This < that when this uses less CPU than that.
