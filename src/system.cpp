@@ -19,11 +19,21 @@ Processor& System::Cpu() { return cpu_; }
 
 // Return a container composed of the system's processes
 vector<Process>& System::Processes() { 
-    auto pids = LinuxParser::Pids();
-    processes_.clear();
-    for (auto pid : pids) {
-        processes_.push_back(Process(pid));
+    vector<Process> nextProcesses;
+    vector<int> pidv = LinuxParser::Pids();
+    set<int> pids(pidv.begin(), pidv.end());
+    for (Process& process : processes_) {
+        // Filter copy old processes that still exist
+        if (pids.find(process.Pid()) != pids.end()) {
+            nextProcesses.emplace_back(process);
+            pids.erase(process.Pid());
+        } 
     }
+    // Create processes for new pids.
+    for (int pid : pids) {        
+        nextProcesses.emplace_back(Process(pid));
+    }
+    processes_ = nextProcesses;
     std::sort(processes_.begin(), processes_.end());
     return processes_;
 }

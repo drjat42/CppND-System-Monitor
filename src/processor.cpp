@@ -1,24 +1,19 @@
 #include "processor.h"
 #include "linux_parser.h"
 
+Processor::Processor() {
+    prevActiveJiffies_ = LinuxParser::ActiveJiffies();;
+    prevTotalJiffies_ =  LinuxParser::Jiffies();;
+}
 
-/*
-PrevIdle = previdle + previowait
-Idle = idle + iowait
-
-PrevNonIdle = prevuser + prevnice + prevsystem + previrq + prevsoftirq + prevsteal
-NonIdle = user + nice + system + irq + softirq + steal
-
-PrevTotal = PrevIdle + PrevNonIdle
-Total = Idle + NonIdle
-
-# differentiate: actual value minus the previous one
-totald = Total - PrevTotal
-idled = Idle - PrevIdle
-CPU_Percentage = (totald - idled)/totald
-*/
-
-// Return the aggregate CPU utilization
+// Return the aggregate CPU utilization since the previous call.
 float Processor::Utilization() { 
-    return LinuxParser::ActiveJiffies() / (float)LinuxParser::Jiffies();
+    float activeJiffies = LinuxParser::ActiveJiffies();
+    float totalJiffies = LinuxParser::Jiffies();
+    float dActiveJiffies = activeJiffies - prevActiveJiffies_;
+    float dTotalJiffies = totalJiffies - prevTotalJiffies_;
+    float utilization = dTotalJiffies == 0 ? 0 : dActiveJiffies / dTotalJiffies;
+    prevActiveJiffies_ = activeJiffies;
+    prevTotalJiffies_ = totalJiffies;
+    return utilization;
 }

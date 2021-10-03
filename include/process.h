@@ -13,14 +13,17 @@ class Process {
   std::string User() const; 
   std::string Command() const; 
   float CpuUtilization();  
-  std::string Ram();         
-  long int UpTime();                  
+  std::string Ram() const;     
+  long int UpTime() const;            
   bool operator<(Process const& that) const; 
 
  private:
-   int pid_; //  WTF, this can't be const and sortable?!
+   int pid_;
    std::string  user_;
    std::string  command_;
+   long prevSysJiffies_;
+   long prevActiveProcJiffies_;
+   float cpuUtilization_;
 };
 
 #endif
