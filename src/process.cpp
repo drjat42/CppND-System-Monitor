@@ -3,7 +3,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include<iostream>
 
 #include "linux_parser.h"
 #include "process.h"
@@ -34,11 +33,8 @@ float  Process::CpuUtilization()  {
     long activeProcJiffies = LinuxParser::ActiveJiffies(Pid());
     long dActiveProcJiffies = activeProcJiffies - prevActiveProcJiffies_;
     cpuUtilization_ = dSysJiffies == 0 ? 0 : dActiveProcJiffies / (float)dSysJiffies;
-    // if (dActiveProcJiffies > 0)
-    //     std::cerr << "pre:" << dSysJiffies << ":" << activeProcJiffies  << ":" << prevActiveProcJiffies_  << ":" << dActiveProcJiffies << std::endl;
     prevActiveProcJiffies_ = activeProcJiffies;
     prevSysJiffies_ = sysJiffies;
-    //std::cerr << "post:" << sysJiffies <<  ":" << prevSysJiffies_  << ":" << dSysJiffies << ":" << activeProcJiffies  << ":" << prevActiveProcJiffies_  << ":" << dActiveProcJiffies << std::endl;
     return cpuUtilization_;
  } 
 
@@ -60,6 +56,5 @@ long int Process::UpTime() const { return LinuxParser::UpTime(Pid()); }
 
 // This < that when this uses less CPU than that.
 bool Process::operator<(Process const& that) const { 
-//   return std::stod(Ram()) > std::stod(that.Ram());
-   return cpuUtilization_ < that.cpuUtilization_; 
+   return cpuUtilization_ > that.cpuUtilization_; 
 }

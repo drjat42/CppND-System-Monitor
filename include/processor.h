@@ -4,7 +4,7 @@
 class Processor {
  public:
   Processor();
-  float Utilization();  // TODO: See src/processor.cpp
+  float Utilization(); 
 
  private:
   float prevActiveJiffies_;

@@ -7,7 +7,6 @@
 #include "process.h"
 #include "processor.h"
 #include "system.h"
-#include <iostream>
 
 using std::set;
 using std::size_t;
@@ -15,7 +14,9 @@ using std::string;
 using std::vector;
 
 // Return the system's CPU
-Processor& System::Cpu() { return cpu_; }
+Processor& System::Cpu() { 
+    return cpu_;
+}
 
 // Return a container composed of the system's processes
 vector<Process>& System::Processes() { 
@@ -42,7 +43,9 @@ vector<Process>& System::Processes() {
 std::string System::Kernel() { return LinuxParser::Kernel(); }
 
 // Return the system's memory utilization
-float System::MemoryUtilization() { return LinuxParser::MemoryUtilization(); }
+float System::MemoryUtilization() { 
+    return LinuxParser::MemoryUtilization(); 
+}
 
 // Return the operating system name
 std::string System::OperatingSystem() { return LinuxParser::OperatingSystem(); }
